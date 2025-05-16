@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+
+  <style>
+    body { font-family: sans-serif; width: 250px; padding: 10px; }
+    button { width: 100%; margin-top: 5px; }
+    #info { font-size: 12px; margin-top: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h3>Đổi Proxy</h3>
+  <input type="text" id="proxyUrl" placeholder="http://127.0.0.1:8080">
+  <button id="setProxy">OK</button>
+  <button id="disableProxy" style="background: #f66; color: white;">Tắt Proxy</button>
+  <button id="gen">🔁 Random lại thông tin</button>
+  <div id="steps"></div>
+  <div id="info">Chưa random...</div>
+  <script src="popup.js"></script>
+
+</body>
+</html>

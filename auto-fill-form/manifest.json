@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Quick Translate",
+  "description": "Translate selected text quickly.",
+  "version": "1.0",
+  "permissions": ["proxy", "storage","tabs","scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup":"popup.html",
+    "default_icon": "icon.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  }
+}
