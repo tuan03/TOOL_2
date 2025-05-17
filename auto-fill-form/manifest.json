@@ -4,7 +4,7 @@
   "description": "Translate selected text quickly.",
   "version": "1.0",
   "permissions": ["proxy", "storage","tabs","scripting", "activeTab"],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": ["<all_urls>","https://coccoc.com/*"],
   "action": {
     "default_popup":"popup.html",
     "default_icon": "icon.png"

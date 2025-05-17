@@ -91,9 +91,9 @@ const tinhZipcodes = { "Hà Nội": "100000", "Hồ Chí Minh": "700000"
 
 // Province codes
 const maTinhDict = {
-    "Hồ Chí Minh": "079", "Hà Nội": "001"
+    "Hà Nội": "001"
 };
-
+//"Hồ Chí Minh": "079",
 // Generate random birthdate in a given year
 function generateRandomBirthdate(year) {
     // Create start and end dates for the given year

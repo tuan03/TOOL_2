@@ -2,9 +2,10 @@
 let currentData = {};
 
 function updateInfo() {
-    const { cccd, tinh, gioi_tinh, birth, tinh_zip, address, town, family, middle, given, sdt, email } = currentData;
+    const { cccd, tinh, gioi_tinh, birth, tinh_zip, address, town, family, middle, given, sdt, email,password } = currentData;
     document.getElementById("info").innerText = `
-MAIL:: ${email}
+Email: ${email}
+Password: ${password}
 👤 ${family} ${middle} ${given}
 🆔 ${cccd}
 📞 ${sdt}
@@ -15,7 +16,6 @@ MAIL:: ${email}
 
 // Gửi script inject vào tab hiện tại
 function runStep(step) {
-    console.log("ok: runn", step)
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.scripting.executeScript({
             target: { tabId: tabs[0].id },
@@ -24,16 +24,28 @@ function runStep(step) {
                 const fill = (id, val) => {
                     const el = document.getElementById(id);
                     if (el) {
-                        console.log("tick", val)
                         el.value = val;
                         el.dispatchEvent(new Event('input', { bubbles: true }));
                         el.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 };
+                const fillSelect = (id, val) => {
+                    const el = document.getElementById(id);
+                    console.log("kkk",el)
+                    if (el) {
+                    el.value = val;
+                    const event = new Event('change', { bubbles: true });
+                    el.dispatchEvent(event);
+                    }
+
+                }
                 const check = (id) => {
                     const el = document.getElementById(id);
-                    if (el) el.checked = true;
+                    if (el && !el.checked) {
+                        el.click(); // mô phỏng hành vi người dùng
+                    }
                 };
+
 
                 switch (step) {
                     case 1:
@@ -44,7 +56,7 @@ function runStep(step) {
                         fill('paypalAccountData_phone', data.sdt);
                         break;
                     case 3:
-                        fill('paypalAccountData_password', 'Phongbk!');
+                        fill('paypalAccountData_password', data.password);
                         break;
                     case 4:
                         fill('paypalAccountData_lastName', data.family);
@@ -58,26 +70,14 @@ function runStep(step) {
                     case 6:
                         fill('paypalAccountData_address1_0', data.address);
                         fill('paypalAccountData_city_0', data.town);
-                        fill('dropdownMenuButton_paypalAccountData_state_0', data.tinh);
+                        fillSelect('dropdownMenuSelect_paypalAccountData_state_0', data.tinh);
                         fill('paypalAccountData_zip_0', data.tinh_zip);
                         check('paypalAccountData_termsAgree');
+                        check('paypalAccountData_marketingOptIn');
                         break;
                     case 7:
-                        const el = document.querySelector("#react-transfer-container > div > div > div > section > div.x6lbwh0.x6lbwh1.css-166vwwe > h3");
+                        window.location.assign(`https://www.paypal.com`)
 
-                        if (el) {
-                            const text = el.textContent; // ví dụ: "$0.26 is yours!"
-                            const match = text.match(/\$\d+(\.\d{2})?/); // tìm chuỗi bắt đầu bằng $ và theo sau là số
-
-                            if (match) {
-                                const amount = match[0]; // "$0.26"
-                                alert("Số tiền là:" + amount)
-                            } else {
-                                console.log("Không tìm thấy số tiền trong chuỗi.");
-                            }
-                        } else {
-                            console.log("Không tìm thấy phần tử h3.");
-                        }
                 }
             },
             args: [step, currentData]
@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   
     const stepsDiv = document.getElementById("steps");
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 7; i++) {
         const btn = document.createElement("button");
         switch (i){
             case 1: 
@@ -123,6 +123,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             case 6:
                 btn.innerText = `🚀 Điền Địa Chỉ`;
                 break;
+            case 7:
+                btn.innerText = `Đến trang chủ`;
+                break;
         }   
         btn.onclick = () => runStep(i);
         stepsDiv.appendChild(btn);
@@ -140,5 +143,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const data = await mt.json()
     currentData = data;
     updateInfo();
+    console.log(currentData)
+    const proxyUrl = document.getElementById("proxyUrl");
+    if (proxyUrl){
+        proxyUrl.value = currentData.proxy
+    }
 });
 
