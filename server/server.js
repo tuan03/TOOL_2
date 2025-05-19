@@ -15,8 +15,8 @@ app.get("/get-random",(req,res)=>{
 })
 
 app.get("/get",(req,res)=>{
-    proxy = "http://171.229.250.177:62848"
-    linkChange = "https://api.enode.vn/getip/dad9a33fb43c4206e56b6a4e0f88b42838660757"
+    proxy = "http://117.1.89.248:59483"
+    linkChange = "https://api.enode.vn/getip/8157bf8bef02bbbb73c54a779aa2b590e011dad0"
     if(dataSaving) {
         dataSaving.proxy = proxy
         dataSaving.linkChange = linkChange
