@@ -8,7 +8,7 @@ dataSaving = null
 app.get("/get-random",(req,res)=>{
     dataRandom = generateCccd()
     dataRandom.password = "Phongbk!"
-    
+    dataRandom.emailNhan = "anhphongbkdn123@gmail.com"
     console.log(dataRandom.email)
     dataSaving = dataRandom
     res.json(dataRandom)

