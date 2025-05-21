@@ -3,7 +3,7 @@
   "name": "Quick Translate",
   "description": "Translate selected text quickly.",
   "version": "1.0",
-  "permissions": ["proxy", "storage","tabs","scripting", "activeTab"],
+  "permissions": ["proxy", "storage","tabs","scripting", "activeTab","clipboardRead"],
   "host_permissions": ["<all_urls>","https://coccoc.com/*"],
   "action": {
     "default_popup":"popup.html",
@@ -17,6 +17,18 @@
   {
     "matches": ["https://www.paypal.com/vn/welcome/signup*"],
     "js": ["autofill.js"]
+  },
+  {
+    "matches": ["https://www.paypal.com/myaccount/summary*"],
+    "js": ["autoPaste.js"]
+  },
+  {
+    "matches": ["https://www.paypal.com/cgp/postonboarding/intent*"],
+    "js": ["autoGo.js"]
+  },
+  {
+    "matches": ["https://www.paypal.com/myaccount/transfer/money-claimed*"],
+    "js": ["autoClaim.js"]
   }
 ],
   "background": {

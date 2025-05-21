@@ -1,6 +1,14 @@
 
 let currentData = {};
+function showAlert(msg) {
+  const alertDiv = document.getElementById('myAlert');
+  alertDiv.textContent = msg;
+  alertDiv.style.display = 'block';
 
+  setTimeout(() => {
+    alertDiv.style.display = 'none';
+  }, 2000);  // 100ms tự động ẩn
+}
 function updateInfo() {
     const { cccd, tinh, gioi_tinh, birth, tinh_zip, address, town, family, middle, given, sdt, email, password, linkChange } = currentData;
     const copyDiv = document.getElementById("copyDiv")
@@ -10,10 +18,10 @@ function updateInfo() {
         const mt = await fetch(linkChange)
         const data = await mt.json()
         if(data.error){
-            alert(data.error)
+            showAlert(data.error);
             return
         }
-        alert(data.message)
+        showAlert(data.message);
     })
     document.getElementById("info").innerText = `
 📧 Email: ${email}
@@ -181,10 +189,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener('keydown', function (e) {
     if (e.code === 'Space') {
         e.preventDefault();
-        document.getElementById('goHome').click();
+        document.getElementById('resetProxy').click();
     }
-    if (e.key.toLowerCase() === 'q') {
-    document.getElementById('natsteps').click();
+    // if (e.key.toLowerCase() === 'q') {
+    // document.getElementById('natsteps').click();
+    // }
+    if (e.key.toLowerCase() === 'c') {
+    document.getElementById('sentMoney').click();
     }
     });
 
