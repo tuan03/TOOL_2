@@ -40,6 +40,8 @@ async function randData() {
     // }
 
     try {
+        const temp = await fetch("http://localhost:3000/random-email");
+        const emailData = await temp.json();
         const mt = await fetch("http://localhost:3000/get-random");
         const data = await mt.json();
         return data;

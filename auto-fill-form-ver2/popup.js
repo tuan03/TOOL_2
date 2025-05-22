@@ -90,7 +90,7 @@ function runStep(step) {
                     if (balanceElement) {
                     const rawText = balanceElement.textContent.trim(); // "$0.00"
                     const numericValue = rawText.replace(/[^0-9.]/g, ''); // 0.00
-                    alert("Xác nhận chuyển tiền: " + numericValue)
+                    // alert("Xác nhận chuyển tiền: " + numericValue)
                     chrome.storage.local.set({ fillRecipient: data.emailNhan, numericValue: numericValue }, () => {
                         window.location.assign("https://www.paypal.com/myaccount/transfer/homepage/pay");
                     });
@@ -118,6 +118,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.getElementById("disableProxy").addEventListener("click", () => {
         chrome.runtime.sendMessage({ type: "disable-proxy" });
+    });
+
+    document.getElementById("nextProxy").addEventListener("click", async () => {
+        chrome.runtime.sendMessage({ type: "disable-proxy" });
+        const mt = await fetch("http://localhost:3000/getProxy")
+        const data = await mt.json()
+        const { currentProxy, nextProxy } = data;
+        const linkChangeCurrent = currentProxy.linkChange
+        const change = await fetch(linkChangeCurrent)
+        const dataChange = await change.json()
+        if(dataChange.error){
+            showAlert(dataChange.error);
+            chrome.runtime.sendMessage({
+                type: "set-proxy",
+                proxyUrl: currentProxy.proxy
+            });
+            return
+        }
+        showAlert(dataChange.message);
+        chrome.runtime.sendMessage({
+            type: "set-proxy",
+            proxyUrl: nextProxy.proxy
+        });
     });
 
 
@@ -189,13 +212,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener('keydown', function (e) {
     if (e.code === 'Space') {
         e.preventDefault();
-        document.getElementById('resetProxy').click();
+        document.getElementById('nextProxy').click();
     }
     // if (e.key.toLowerCase() === 'q') {
     // document.getElementById('natsteps').click();
     // }
     if (e.key.toLowerCase() === 'c') {
     document.getElementById('sentMoney').click();
+    }
+    if (e.key.toLowerCase() === 'z') {
+    document.getElementById('copyDiv').click();
     }
     });
 
