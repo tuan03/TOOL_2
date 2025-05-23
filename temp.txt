@@ -1,7 +1,0 @@
-const elements = document.querySelectorAll('.isCredit.txn_amt_font.css-1pmwpmb-text_body.css-1in6wbk-RichText');
-
-elements.forEach((el, index) => {
-  const text = el.textContent.trim();
-    const value = parseFloat(text.replace(/[^\d.]/g, ''));
-    console.log(value); 
-});
