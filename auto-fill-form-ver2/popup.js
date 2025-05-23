@@ -1,23 +1,23 @@
 
 let currentData = {};
 function showAlert(msg) {
-  const alertDiv = document.getElementById('myAlert');
-  alertDiv.textContent = msg;
-  alertDiv.style.display = 'block';
+    const alertDiv = document.getElementById('myAlert');
+    alertDiv.textContent = msg;
+    alertDiv.style.display = 'block';
 
-  setTimeout(() => {
-    alertDiv.style.display = 'none';
-  }, 2000);  // 100ms tự động ẩn
+    setTimeout(() => {
+        alertDiv.style.display = 'none';
+    }, 2000);  // 100ms tự động ẩn
 }
 function updateInfo() {
     const { cccd, tinh, gioi_tinh, birth, tinh_zip, address, town, family, middle, given, sdt, email, password, linkChange } = currentData;
     const copyDiv = document.getElementById("copyDiv")
     copyDiv.innerText = email
     const resetProxy = document.getElementById("resetProxy")
-    resetProxy.addEventListener("click",async function() {
+    resetProxy.addEventListener("click", async function () {
         const mt = await fetch(linkChange)
         const data = await mt.json()
-        if(data.error){
+        if (data.error) {
             showAlert(data.error);
             return
         }
@@ -40,9 +40,53 @@ function runStep(step) {
         chrome.scripting.executeScript({
             target: { tabId: tabs[0].id },
             func: (step, data) => {
+
+                if (step == 10000) {
+                    const width = 900;
+                    const height = 600;
+                    const left = (window.screen.width / 2) - (width / 2);
+                    const top = (window.screen.height / 2) - (height / 2);
+
+                    const popup = window.open(
+                        "/myaccount/summary",
+                        "popupWindow",
+                        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+                    );
+
+                    // Dùng setInterval để chờ popup load xong và an toàn hơn
+                    const interval = setInterval(() => {
+                        try {
+                            if (popup.document && popup.document.readyState === "complete") {
+                                clearInterval(interval);
+                                console.log("Popup đã mở thành công!");
+                                const myTick = setInterval(() => {
+                                    const elements = popup.document.querySelectorAll('.isCredit.txn_amt_font.css-1pmwpmb-text_body.css-1in6wbk-RichText');
+                                    console.log("elements", elements)
+                                    if (elements.length > 0) {
+                                        clearInterval(myTick);
+                                    }
+                                    elements.forEach((el, index) => {
+                                        const text = el.textContent.trim();
+                                        const value = parseFloat(text.replace(/[^\d.]/g, ''));
+                                        console.log(value);
+                                    });
+                                    popup.close();
+
+                                }, 1000);
+
+                            }
+                        } catch (err) {
+                            // Nếu khác origin, việc truy cập sẽ ném lỗi và vào đây
+                            console.warn("Không thể truy cập popup do khác origin hoặc chưa sẵn sàng.");
+                        }
+                    }, 500);
+
+                    return;
+                }
+
                 // inject vào trang web
                 const fill = (id, val) => {
-                    
+
                     const el = document.getElementById(id);
                     if (el) {
                         el.value = val;
@@ -80,22 +124,22 @@ function runStep(step) {
                 fill('paypalAccountData_zip_0', data.tinh_zip);
                 check('paypalAccountData_termsAgree');
                 check('paypalAccountData_marketingOptIn');
-                
-                if(step == 100){
+
+                if (step == 100) {
                     window.location.assign(`https://www.paypal.com`)
                 }
 
-                if(step == 1000){
+                if (step == 1000) {
                     const balanceElement = document.querySelector('[data-test-id="available-balance"]');
                     if (balanceElement) {
-                    const rawText = balanceElement.textContent.trim(); // "$0.00"
-                    const numericValue = rawText.replace(/[^0-9.]/g, ''); // 0.00
-                    // alert("Xác nhận chuyển tiền: " + numericValue)
-                    chrome.storage.local.set({ fillRecipient: data.emailNhan, numericValue: numericValue }, () => {
-                        window.location.assign("https://www.paypal.com/myaccount/transfer/homepage/pay");
-                    });
+                        const rawText = balanceElement.textContent.trim(); // "$0.00"
+                        const numericValue = rawText.replace(/[^0-9.]/g, ''); // 0.00
+                        // alert("Xác nhận chuyển tiền: " + numericValue)
+                        chrome.storage.local.set({ fillRecipient: data.emailNhan, numericValue: numericValue }, () => {
+                            window.location.assign("https://www.paypal.com/myaccount/transfer/homepage/pay");
+                        });
                     }
-                    
+
                 }
 
 
@@ -119,28 +163,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("disableProxy").addEventListener("click", () => {
         chrome.runtime.sendMessage({ type: "disable-proxy" });
     });
+    function sendMessageAsync(message) {
+        return new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage(message, (response) => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+    }
 
     document.getElementById("nextProxy").addEventListener("click", async () => {
-        chrome.runtime.sendMessage({ type: "disable-proxy" });
-        const mt = await fetch("http://localhost:3000/getProxy")
-        const data = await mt.json()
-        const { currentProxy, nextProxy } = data;
-        const linkChangeCurrent = currentProxy.linkChange
-        const change = await fetch(linkChangeCurrent)
-        const dataChange = await change.json()
-        if(dataChange.error){
-            showAlert(dataChange.error);
-            chrome.runtime.sendMessage({
+        try {
+            await sendMessageAsync({ type: "disable-proxy" });
+
+            const response = await fetch("http://localhost:3000/getProxy");
+            const data = await response.json();
+            const { currentProxy, nextProxy } = data;
+
+            const changeResponse = await fetch(currentProxy.linkChange);
+            const changeData = await changeResponse.json();
+
+            if (changeData.error) {
+                await sendMessageAsync({
+                    type: "set-proxy",
+                    proxyUrl: currentProxy.proxy
+                });
+                showAlert(changeData.error);
+                return;
+            }
+
+            await sendMessageAsync({
                 type: "set-proxy",
-                proxyUrl: currentProxy.proxy
+                proxyUrl: nextProxy.proxy
             });
-            return
+
+            showAlert(changeData.message);
+
+        } catch (error) {
+            showAlert("Đã xảy ra lỗi: " + error.message);
         }
-        showAlert(dataChange.message);
-        chrome.runtime.sendMessage({
-            type: "set-proxy",
-            proxyUrl: nextProxy.proxy
-        });
     });
 
 
@@ -153,6 +217,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btn3 = document.getElementById("sentMoney");
     btn3.onclick = () => runStep(1000);
 
+    const testingButton = document.getElementById("testing");
+    testingButton.onclick = () => runStep(10000);
 
     document.getElementById("gen").onclick = async () => {
         const mt = await fetch("http://localhost:3000/get-random")
@@ -164,22 +230,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         const textarea = document.getElementById("linkurl");
         const lines = textarea.value.split(/\r?\n/);
         const links = lines
-                        .map(line => line.trim())
-                        .filter(line => line !== "");
+            .map(line => line.trim())
+            .filter(line => line !== "");
         links.forEach(link => {
             chrome.tabs.create({ url: link });
         });
     });
     fetch("https://api.ipify.org?format=json") // Gửi yêu cầu GET đến IP API
-    .then(response => response.json())     // Chuyển đổi kết quả thành JSON
-    .then(data => {
-        const myip = document.getElementById("myip"); // Lấy thẻ input có id "myip"
-        myip.textContent  = data.ip;                         // Gán giá trị IP vào input
-    })
-    .catch(error => {
-        const myip = document.getElementById("myip");
-        myip.textContent  = "Lỗi Lấy Ip";                    // Ghi thông báo lỗi nếu fetch thất bại
-    });
+        .then(response => response.json())     // Chuyển đổi kết quả thành JSON
+        .then(data => {
+            const myip = document.getElementById("myip"); // Lấy thẻ input có id "myip"
+            myip.textContent = data.ip;                         // Gán giá trị IP vào input
+        })
+        .catch(error => {
+            const myip = document.getElementById("myip");
+            myip.textContent = "Lỗi Lấy Ip";                    // Ghi thông báo lỗi nếu fetch thất bại
+        });
 
     // Khởi tạo dữ liệu lần đầu
     const mt = await fetch("http://localhost:3000/get")
@@ -192,38 +258,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         proxyUrl.value = currentData.proxy
     }
     const copyDiv = document.getElementById("copyDiv")
-    copyDiv.addEventListener("click", function() {
-    const text = this.textContent;
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        const textContent = copyDiv.textContent
-        copyDiv.textContent = "Đã sao chép"
-        setTimeout(()=>{
-            copyDiv.textContent = textContent
-        },300)
-      })
-      .catch(err => {
-        console.error("Lỗi sao chép: ", err);
-      });
-  });
-
-
-
-  document.addEventListener('keydown', function (e) {
-    if (e.code === 'Space') {
-        e.preventDefault();
-        document.getElementById('nextProxy').click();
-    }
-    // if (e.key.toLowerCase() === 'q') {
-    // document.getElementById('natsteps').click();
-    // }
-    if (e.key.toLowerCase() === 'c') {
-    document.getElementById('sentMoney').click();
-    }
-    if (e.key.toLowerCase() === 'z') {
-    document.getElementById('copyDiv').click();
-    }
+    copyDiv.addEventListener("click", function () {
+        const text = this.textContent;
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                const textContent = copyDiv.textContent
+                copyDiv.textContent = "Đã sao chép"
+                setTimeout(() => {
+                    copyDiv.textContent = textContent
+                }, 300)
+            })
+            .catch(err => {
+                console.error("Lỗi sao chép: ", err);
+            });
     });
+
+
+
+    document.addEventListener('keydown', function (e) {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            document.getElementById('nextProxy').click();
+        }
+        // if (e.key.toLowerCase() === 'q') {
+        // document.getElementById('natsteps').click();
+        // }
+        if (e.key.toLowerCase() === 'c') {
+            document.getElementById('sentMoney').click();
+        }
+        if (e.key.toLowerCase() === 'z') {
+            document.getElementById('copyDiv').click();
+        }
+    });
+
+
+
 
 });
 

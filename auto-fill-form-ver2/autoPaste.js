@@ -7,7 +7,12 @@ document.addEventListener('mousedown', async function (event) {
                         .map(line => line.trim())
                         .filter(line => line !== "");
         for (let i = 0; i < links.length; i++) {
-            await delay(1000);
+            await delay(500);
+            const link = links[i];
+            window.open(link, '_blank');
+        }
+        for (let i = 0; i < links.length; i++) {
+            await delay(500);
             const link = links[i];
             window.open(link, '_blank');
         }
