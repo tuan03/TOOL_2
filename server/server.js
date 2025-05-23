@@ -4,18 +4,45 @@ const app = express()
 const cors = require("cors")
 const axios = require('axios');
 const e = require("express");
+
+const fs = require('fs').promises;
 app.use(cors())
 app.listen(3000)
 dataSaving = null
-
+let isSaving = true
 let emailRandom = null
 let mailIsGetLink = true
 app.get("/random-email", async (req, res) => {
-  let dataRandom = generateCccd()
-  emailRandom = dataRandom.email
-  mailIsGetLink = false
-  res.json({ email: emailRandom })
-})
+  if (mailIsGetLink && !isSaving) {
+    return res.json({ error: "Hãy lưu email trước khi bắt đầu" });
+  }
+
+  // Lấy thời gian hiện tại và định dạng hh:mm dd/mm/yyyy
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const MM = String(now.getMonth() + 1).padStart(2, '0'); // Tháng từ 0-11 nên +1
+  const yyyy = now.getFullYear();
+
+  const timestamp = `${hh}:${mm} ${dd}/${MM}/${yyyy}`;
+
+  let dataRandom = generateCccd();
+  emailRandom = dataRandom.email;
+  mailIsGetLink = false;
+  isSaving = false;
+
+  const logLine = `${timestamp} | ${emailRandom}\n`;
+
+  try {
+    await fs.appendFile('./temp/logEmail.txt', logLine);
+    
+    res.json({ email: emailRandom });
+  } catch (err) {
+    console.error('Lỗi ghi log:', err);
+    res.status(500).json({ error: 'Lỗi ghi log' });
+  }
+});
 app.get("/get-random", (req, res) => {
   dataRandom = generateCccd()
   dataRandom.password = "Phongbk!"
@@ -63,7 +90,6 @@ app.get("/getProxy", async (req, res) => {
 
 
 
-const fs = require('fs').promises;
 let results = []
 
 async function readData() {
@@ -92,6 +118,9 @@ let temp = null
 
 app.get("/getLink", async (req, res) => {
   try {
+    if (isSaving) {
+      return res.json({ error: "Đã lưu mail" });
+    }
     if (!emailRandom) {
       return res.json({ error: "Chưa có email" });
     }
@@ -121,8 +150,8 @@ app.get("/getLink", async (req, res) => {
     const line = `${emailRandom}\t${firstLink.email}\t${firstLink.amount}\t\t\t${secondLink.email}\t${secondLink.amount}\n`;
     const isGet = `${firstLink.email}\n${secondLink.email}\n`
     // Append file bằng promise (await cho chắc chắn ghi xong)
-    await fs.appendFile('isGet.txt', isGet);
-    await fs.appendFile('log.txt', line);
+    await fs.appendFile('./temp/logIsGet.txt', isGet);
+    await fs.appendFile('./temp/logNhan.txt', line);
 
     mailIsGetLink = true;
     temp = data;
@@ -137,6 +166,9 @@ app.get("/getLink", async (req, res) => {
 
 app.get("/saveMail", async (req, res) => {
   try {
+    if (isSaving) {
+      return res.json({ error: "Đã lưu mail rồi" });
+    }
     if (!emailRandom) {
       return res.json({ error: "Chưa có email" });
     }
@@ -145,8 +177,32 @@ app.get("/saveMail", async (req, res) => {
     }
     const isGet = `${emailRandom}\n`
     await fs.appendFile('saveEmail.txt', isGet);
+    isSaving = true;
     res.json({ success: "Lưu mail thành công" });
   } catch (err) {
     res.json({ error: "Server error" });
   }
+});
+
+const os = require('os');
+function getPublicIps() {
+  const nets = os.networkInterfaces();
+  const results = [];
+
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      // Chỉ lấy IPv4, không lấy internal (localhost)
+      if (net.family === 'IPv4' && !net.internal) {
+        results.push(net.address);
+      }
+    }
+  }
+  return results;
+}
+app.get('/ip', (req, res) => {
+  const ips = getPublicIps();
+  if (ips.length === 0) {
+    return res.json({ error: 'Không tìm thấy IP public' });
+  }
+  res.json({ ips });
 });

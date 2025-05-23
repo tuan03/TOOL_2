@@ -1,7 +1,23 @@
 // const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-// document.addEventListener('mousedown', async function (event) {
 
+
+//    document.addEventListener('mousedown', async function (event) {
+//     if (event.button === 2) {
+//         const mt = await fetch("http://localhost:3000/getLink")
+//         const data = await mt.json()
+//         if (data.error) {
+//             alert(data.error);
+//             return;
+//         }
+//         const { firstLink, secondLink } = data;
+//         window.open(firstLink, '_blank', "noopener");
+//         await delay(200);
+//         window.open(secondLink, '_blank', "noopener");
+//     }
 // });
+
+
+
 
 (function () {
   function initToastSystem() {
@@ -115,41 +131,7 @@
     initToastSystem();
   }
 })();
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-
-document.addEventListener('mousedown', async function (event) {
-  if (event.button === 1) {
-    const textarea = await navigator.clipboard.readText();
-    const lines = textarea.split(/\r?\n/);
-    const links = lines
-      .map(line => line.trim())
-      .filter(line => line !== "");
-    for (let i = 0; i < links.length; i++) {
-      await delay(200);
-      const link = links[i];
-      window.open(link, '_blank');
-    }
-    for (let i = 0; i < links.length; i++) {
-      await delay(200);
-      const link = links[i];
-      window.open(link, '_blank');
-    }
-  }
-  if (event.button === 2) {
-    const mt = await fetch("http://localhost:3000/getLink")
-    const data = await mt.json()
-    if (data.error) {
-      showToast(data.error, 2000);
-      return;
-    }
-    const { firstLink, secondLink } = data;
-    window.open(firstLink, '_blank', "noopener");
-    await delay(200);
-    window.open(secondLink, '_blank', "noopener");
-    await delay(200);
-    window.open(firstLink, '_blank', "noopener");
-    await delay(200);
-    window.open(secondLink, '_blank', "noopener");
-  }
-});
+setInterval(() => {
+  showToast('Đây là thông báo từ extension!', 2500);
+}, 3000);

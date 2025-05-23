@@ -10,6 +10,7 @@
     "default_icon": "icon.png"
   },
   "content_scripts": [
+  
   {
     "matches": ["https://www.paypal.com/myaccount/transfer/homepage/pay*"],
     "js": ["content.js"]
@@ -29,6 +30,11 @@
   {
     "matches": ["https://www.paypal.com/myaccount/transfer/money-claimed*"],
     "js": ["autoClaim.js"]
+  }
+  ,
+  {
+    "matches": ["https://www.paypal.com/us/home*"],
+    "js": ["goToLink.js"]
   }
 ],
   "background": {
