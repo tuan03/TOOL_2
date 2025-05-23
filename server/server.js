@@ -184,25 +184,15 @@ app.get("/saveMail", async (req, res) => {
   }
 });
 
-const os = require('os');
-function getPublicIps() {
-  const nets = os.networkInterfaces();
-  const results = [];
-
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-      // Chỉ lấy IPv4, không lấy internal (localhost)
-      if (net.family === 'IPv4' && !net.internal) {
-        results.push(net.address);
-      }
-    }
+const path = require('path');
+app.get('/showEmail', async (req, res) => {
+  const filePath = path.join(__dirname, 'saveEmail.txt');
+  try {
+    const data = await fs.readFile(filePath, 'utf8');
+    const htmlFormatted = data.replace(/\n/g, '<br>'); // Chuyển \n thành <br>
+    res.send(`<div style="font-family: monospace;">${htmlFormatted}</div>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi khi đọc file');
   }
-  return results;
-}
-app.get('/ip', (req, res) => {
-  const ips = getPublicIps();
-  if (ips.length === 0) {
-    return res.json({ error: 'Không tìm thấy IP public' });
-  }
-  res.json({ ips });
 });
